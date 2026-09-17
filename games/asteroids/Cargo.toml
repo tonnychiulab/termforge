@@ -1,0 +1,11 @@
+[package]
+name = "asteroids"
+version = "0.1.0"
+edition = "2021"
+authors = ["Antigravity AGY Team"]
+description = "Classic Asteroids arcade demo game powered by the TermForge engine"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+termforge = { path = "../../crates/termforge" }
+termion = "3.0"

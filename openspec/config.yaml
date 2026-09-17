@@ -1,0 +1,29 @@
+schema: spec-driven
+
+context: |
+  Project: TermForge — A full-featured terminal game engine
+  Tech stack: Rust (2021 edition), termion (pure Rust, no C deps)
+  Build: Cargo with workspace support
+  Testing: Rust built-in test framework + criterion for benchmarks
+  Target: 60 FPS terminal rendering on standard terminals
+  Platform: Linux primary, macOS secondary
+  Architecture: Entity-Component-System (ECS) with generational arenas
+  Rendering: Double-buffered cell grid with dirty-rect optimization
+  No unsafe code policy: All code must compile without unsafe blocks
+
+rules:
+  proposal:
+    - Include performance targets for each subsystem
+    - Identify all affected subsystems and their interactions
+  specs:
+    - Use GIVEN/WHEN/THEN format for all scenarios
+    - Include performance requirements where applicable
+    - Specify behavior at terminal boundary conditions
+  design:
+    - Include module dependency diagrams (text-based)
+    - Document memory management strategy
+    - Justify each architectural decision with alternatives considered
+  tasks:
+    - Group by subsystem milestone
+    - Include benchmark tasks for performance-critical paths
+    - Each task must be atomic and independently testable
