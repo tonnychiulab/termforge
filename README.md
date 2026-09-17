@@ -90,6 +90,14 @@ cargo run --release -p asteroids
 cargo test --workspace
 ```
 
+## 🌐 網頁試玩如何更新
+
+線上試玩頁 https://tonnychiulab.github.io/termforge/ 由 GitHub Pages 的 **`gh-pages` 分支**供應。
+
+推送 `main` 後，工作流程 [Build & Deploy WebAssembly Game](.github/workflows/deploy.yml) 會編譯 WASM，把 `dist/` 寫入 `gh-pages`。請不要改用「GitHub Actions 作為 Pages 來源」或 `actions/deploy-pages`，除非先把 Pages 設定與 environment 允許的分支一併改掉。
+
+安全初測公開摘要：[`docs/security/source-code-review-2026-09-17.md`](docs/security/source-code-review-2026-09-17.md)
+
 ---
 
 <br>
@@ -104,6 +112,8 @@ cargo test --workspace
 - **Quadtree Collision Detection**: $O(N \log N)$ broadphase spatial acceleration for circular and AABB colliders.
 - **Tween & Particle Engine**: 30+ easing curves, memory-pooled particle emitter, and ASCII sprite animators.
 - **WebAssembly + Retro CRT**: Runs at 60 FPS in browsers via `xterm.js` and WebAssembly with authentic CRT phosphor glow and scanlines.
+
+The live demo at https://tonnychiulab.github.io/termforge/ is served from the **`gh-pages` branch**. Pushes to `main` rebuild WASM and update that branch.
 
 ---
 
