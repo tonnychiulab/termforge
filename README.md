@@ -129,6 +129,11 @@ cargo test --workspace
   - [`specs/controls-and-abilities.md`](openspec/changes/enhanced-controls-and-abilities/specs/controls-and-abilities.md) — 煞車、側移、180° 翻轉、瞬移與 EMP 炸彈規範
   - [`design.md`](openspec/changes/enhanced-controls-and-abilities/design.md) — 運動力學向量與能力冷卻狀態機
   - [`tasks.md`](openspec/changes/enhanced-controls-and-abilities/tasks.md) — 實作檢核表 (100% 完成)
+- **變更 4：遊戲頁面即時操作輔助小卡 (`add-in-page-controls-cheat-sheet`)**
+  - [`proposal.md`](openspec/changes/add-in-page-controls-cheat-sheet/proposal.md) — 頁面輔助說明背景與需求
+  - [`specs/controls-cheat-sheet.md`](openspec/changes/add-in-page-controls-cheat-sheet/specs/controls-cheat-sheet.md) — 響應式佈局與繁中英文對照規範
+  - [`design.md`](openspec/changes/add-in-page-controls-cheat-sheet/design.md) — 霓虹微排版與三欄式網格設計
+  - [`tasks.md`](openspec/changes/add-in-page-controls-cheat-sheet/tasks.md) — 實作檢核表 (100% 完成)
 
 ---
 
