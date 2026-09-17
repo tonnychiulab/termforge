@@ -100,6 +100,8 @@ cargo test --workspace
 
 安全初測公開摘要：[`docs/security/source-code-review-2026-09-17.md`](docs/security/source-code-review-2026-09-17.md)
 
+PR 事後審查網（可選，不是撰寫時教材）：[`docs/security/review-net.md`](docs/security/review-net.md)
+
 ---
 
 <br>

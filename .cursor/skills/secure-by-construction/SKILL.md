@@ -37,7 +37,7 @@ Security scenes exist **before** implementation code. Read the OpenSpec baseline
 **Entry:** Phase 2 passed.
 
 1. Implement only what the scenes allow.
-2. Do not start a CIA report, Open Code Review, Codex Security, or a review skill.
+2. Do not start a CIA report, Open Code Review, Codex Security, or a review skill. Those are after-the-fact nets (CI may run OCR on the PR).
 
 **Exit:** the diff matches the scenes.
 
