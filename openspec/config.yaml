@@ -10,20 +10,30 @@ context: |
   Architecture: Entity-Component-System (ECS) with generational arenas
   Rendering: Double-buffered cell grid with dirty-rect optimization
   No unsafe code policy: All code must compile without unsafe blocks
+  Security baseline: openspec/specs/secure-by-construction.md — every change must apply or explicitly N/A each clause before implementation
 
 rules:
   proposal:
     - Include performance targets for each subsystem
     - Identify all affected subsystems and their interactions
+    - State the trust boundary (信任邊界) in a few sentences (who inputs, who executes, where data lives, whether there is a backend/account/secret)
+    - List security capabilities this change does not provide; do not claim controls that do not exist
   specs:
     - Use GIVEN/WHEN/THEN format for all scenarios
     - Include performance requirements where applicable
     - Specify behavior at terminal boundary conditions
+    - Reference secure-by-construction
+    - For each secure-by-construction clause, mark 適用 or 不適用 with a reason
+    - Each 適用 clause needs at least one GIVEN/WHEN/THEN about this change, not a restatement of the baseline
   design:
     - Include module dependency diagrams (text-based)
     - Document memory management strategy
     - Justify each architectural decision with alternatives considered
+    - If the change touches web, CI, hosting, third-party scripts, or input surfaces, describe the mechanism that actually applies (never a control the platform cannot enforce)
   tasks:
     - Group by subsystem milestone
     - Include benchmark tasks for performance-critical paths
     - Each task must be atomic and independently testable
+    - Each 適用 security scenario maps to at least one checkbox
+    - 未驗證不得勾完成 (including checks that the live publish source matches the docs)
+    - Do not mark feature tasks complete while leaving security tasks empty for later
