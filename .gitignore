@@ -3,3 +3,12 @@
 Cargo.lock.bk
 .DS_Store
 *.swp
+
+# Never commit credentials (this repo has none; keep it that way)
+.env
+.env.*
+*.pem
+*.key
+id_rsa
+id_ed25519
+credentials.json

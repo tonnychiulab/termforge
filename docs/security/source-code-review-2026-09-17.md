@@ -12,9 +12,9 @@
 | 審查模型 | Cursor Grok 4.6 |
 | 版本 | 公開稿 v0.1 |
 
-追蹤討論：[#2](https://github.com/tonnychiulab/termforge/issues/2)。
+追蹤討論：[#2](https://github.com/tonnychiulab/termforge/issues/2)。收口紀錄見當日工作日誌第六、七節。
 
-**後續處理：** TF-01 已在 PR #3 對齊發布路徑。TF-02 改為 `dist/vendor/` 自託管 xterm.js（執行期不再載入 jsDelivr）。TF-03 刪除 GitHub Pages 不會套用的 `_headers`，改以 CSP／referrer meta 與 `framebust.js`；平台仍無法送出 `X-Frame-Options`。
+**後續處理：** TF-01 已在 PR #3 對齊發布路徑。TF-02／TF-03 已在 PR #4 修復並由 Actions 寫入 `gh-pages`。xterm.js 自託管於 `dist/vendor/`；GitHub Pages 不會套用 `_headers`，改以 CSP／referrer meta 與 `framebust.js`（平台仍無法送出 `X-Frame-Options`）。發現項已全部處理；剩餘項目為工程強化，不是未修漏洞。
 
 ## 摘要
 
