@@ -1,0 +1,197 @@
+  import init, { WasmAsteroidsGame } from './pkg/termforge_web.js';
+
+  class RetroSoundManager {
+    constructor() {
+      this.ctx = null;
+    }
+    init() {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+    playLaser() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.12);
+    }
+    playHit() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.15);
+    }
+    playExplosion() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.35);
+    }
+    playWarp() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.25);
+    }
+    playEmp() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + 0.6);
+      gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.6);
+    }
+  }
+
+  const sound = new RetroSoundManager();
+
+  async function start() {
+    await init();
+
+    const termCols = 80;
+    const termRows = 24;
+
+    const term = new Terminal({
+      cols: termCols,
+      rows: termRows,
+      cursorBlink: false,
+      cursorStyle: 'underline',
+      theme: {
+        background: '#050805',
+        foreground: '#33ff66',
+        cursor: '#33ff66',
+        black: '#000000',
+        red: '#ff3333',
+        green: '#33ff66',
+        yellow: '#ffb000',
+        blue: '#3399ff',
+        magenta: '#cc33ff',
+        cyan: '#00ffff',
+        white: '#ffffff',
+        brightBlack: '#555555',
+        brightRed: '#ff6666',
+        brightGreen: '#66ff99',
+        brightYellow: '#ffd24d',
+        brightBlue: '#66b3ff',
+        brightMagenta: '#df80ff',
+        brightCyan: '#80ffff',
+        brightWhite: '#ffffff',
+      },
+      fontFamily: 'Courier New, monospace',
+      fontSize: 16,
+      letterSpacing: 1,
+      lineHeight: 1.1,
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal-container'));
+    fitAddon.fit();
+
+    window.addEventListener('resize', () => {
+      fitAddon.fit();
+    });
+
+    const game = new WasmAsteroidsGame(termCols, termRows);
+
+    // Keyboard listeners
+    window.addEventListener('keydown', (e) => {
+      sound.init();
+      game.key_down(e.key);
+      if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      game.key_up(e.key);
+    });
+
+    // Touch button listeners
+    const setupTouchBtn = (id, keyName) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        sound.init();
+        game.key_down(keyName);
+      });
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        game.key_up(keyName);
+      });
+    };
+
+    setupTouchBtn('btn-left', 'a');
+    setupTouchBtn('btn-right', 'd');
+    setupTouchBtn('btn-strafe-left', 'q');
+    setupTouchBtn('btn-strafe-right', 'e');
+    setupTouchBtn('btn-thrust', 'w');
+    setupTouchBtn('btn-brake', 's');
+    setupTouchBtn('btn-fire', ' ');
+    setupTouchBtn('btn-emp', 'b');
+    setupTouchBtn('btn-pause', 'p');
+
+    let lastTime = performance.now();
+
+    function loop(currentTime) {
+      const dt = Math.min((currentTime - lastTime) / 1000.0, 0.1);
+      lastTime = currentTime;
+
+      const ansiDiff = game.tick(dt);
+      if (ansiDiff && ansiDiff.length > 0) {
+        term.write(ansiDiff);
+      }
+
+      const sfx = game.last_sound();
+      if (sfx === 'fire') sound.playLaser();
+      else if (sfx === 'hit') sound.playHit();
+      else if (sfx === 'explosion') sound.playExplosion();
+      else if (sfx === 'warp') sound.playWarp();
+      else if (sfx === 'emp') sound.playEmp();
+
+      requestAnimationFrame(loop);
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  start().catch(console.error);
