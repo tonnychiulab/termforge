@@ -5,17 +5,19 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+# GitHub Pages for this repo is served from the gh-pages branch (legacy source).
+# Publish the freshly built dist/ there so push-to-main updates the live demo.
+# Do not use actions/deploy-pages here: the github-pages environment only allows
+# the gh-pages branch, so deploying from main always failed.
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -35,18 +37,21 @@ jobs:
       - name: Generate JS bindings
         run: wasm-bindgen --target web --out-dir dist/pkg target/wasm32-unknown-unknown/release/termforge_web.wasm
 
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish dist to gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone --depth 1 --branch gh-pages "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" _site
+          find _site -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cp -a dist/. _site/
+          cd _site
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to publish"
+            exit 0
+          fi
+          git commit -m "deploy: web player from ${GITHUB_SHA}"
+          git push origin gh-pages
