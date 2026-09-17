@@ -4,6 +4,8 @@ A modern, zero-dependency, 60 FPS terminal game engine built in pure Rust, compl
 
 Built following the **[OpenSpec](https://github.com/Fission-AI/openspec)** Spec-Driven Development (SDD) standard.
 
+👉 **[🎮 點此立即線上遊玩 (Play Live Web Demo)](https://tonnychiulab.github.io/termforge/)** (免安裝，支援電腦鍵盤與手機觸控！)
+
 ---
 
 ## 🌟 Features & Architecture
