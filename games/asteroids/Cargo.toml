@@ -2,7 +2,7 @@
 name = "asteroids"
 version = "0.1.0"
 edition = "2021"
-authors = ["Antigravity AGY Team"]
+authors = ["Tonny Chiu <@tonnychiulab>", "Antigravity AGY"]
 description = "Classic Asteroids arcade demo game powered by the TermForge engine"
 license = "MIT OR Apache-2.0"
 

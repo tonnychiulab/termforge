@@ -2,7 +2,7 @@
 name = "termforge"
 version = "0.1.0"
 edition = "2021"
-authors = ["Antigravity AGY Team"]
+authors = ["Tonny Chiu <@tonnychiulab>", "Antigravity AGY"]
 description = "A high-performance, double-buffered terminal game engine in pure Rust"
 license = "MIT OR Apache-2.0"
 

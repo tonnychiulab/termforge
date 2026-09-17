@@ -119,6 +119,31 @@ cargo test --workspace
 
 ---
 
+## 👥 共同作者與開發團隊 (Authors & Credits)
+
+本專案為 **人類工程師與 Antigravity (AGY) Agentic AI 深度結對編程 (Pair Programming)** 的極致結晶：
+
+- **👨‍💻 Tonny Chiu** ([@tonnychiulab](https://github.com/tonnychiulab))
+  - 專案發起、核心產品方向決策、技術棧選型互動與最終成果驗收。
+- **🤖 Antigravity (AGY)**
+  - Google DeepMind 設計的強大 Agentic AI 程式設計助理，全程自主執行專案架構設計、系統級代碼實現、WASM 橋接與 Git/Pages 部署。
+
+### 🧠 協同開發模型架構說明 (AI Models Used)
+
+在整個工程週期中，AGY 結合了不同專長的前沿大語言模型進行多階段協同作業：
+
+1. **Claude Opus (Thinking)**：
+   - **核心任務**：深入語義分析、全系統架構推導與 OpenSpec SDD 規範制訂。
+   - **成果**：完成兩套完整的 SDD 變更規格（`termforge-engine` 與 `add-web-wasm-support`），嚴謹產出 RFC 2119 行為場景、Generational Arena ECS 設計與 Quadtree 空間分割決策。
+2. **Gemini Pro & Flash**：
+   - **核心任務**：作為背景子代理 (Subagents)，精準爬取並解析 OpenSpec 官方規格倉庫，提取核心 Schema 與語法規則。
+3. **Gemini Flash (Medium)**：
+   - **核心任務**：高吞吐量代碼生成、系統除錯與端到端工程落地。
+   - **成果**：純 Rust 核心引擎代碼編寫、Rust 1.98.1 工具鏈與 wasm32 編譯排錯、WebAssembly + xterm.js 網頁版移植、CSS3 復古 CRT 掃描線著色器，以及 GitHub 遠端倉庫建立、PR 開啟與 GitHub Pages 全自動上線部署。
+
+---
+
 ## 📜 開源許可證 (License)
 
 本專案採用 [MIT OR Apache-2.0](LICENSE) 雙重許可證授權。
+
