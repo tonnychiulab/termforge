@@ -1,0 +1,52 @@
+# Optional PR review net. Not the write-time security path.
+# Write-time: openspec/specs/secure-by-construction.md and
+# .cursor/skills/secure-by-construction/SKILL.md
+# Skip when OCR_LLM_AUTH_TOKEN is empty (including fork PRs).
+# Uses pull_request, not pull_request_target.
+# Codex Security is not wired here; see docs/security/review-net.md
+
+name: PR review net
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ocr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  open-code-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Skip when LLM token is unset
+        id: gate
+        env:
+          TOKEN: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "OCR_LLM_AUTH_TOKEN is empty; skipping optional review net."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Open Code Review
+        if: steps.gate.outputs.skip != 'true'
+        continue-on-error: true
+        uses: alibaba/open-code-review@a66240084b382ed97a47590bdec13a6a34df0743 # v1.10.0
+        with:
+          ocr_version: "1.10.0"
+          llm_url: ${{ secrets.OCR_LLM_URL }}
+          llm_auth_token: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+          llm_model: ${{ vars.OCR_LLM_MODEL != '' && vars.OCR_LLM_MODEL || 'gpt-4o' }}
+          llm_use_anthropic: ${{ vars.OCR_LLM_USE_ANTHROPIC != '' && vars.OCR_LLM_USE_ANTHROPIC || 'false' }}
+          language: Chinese
+          sticky_summary: "true"
+          incremental: "true"
+          upload_artifacts: "true"
