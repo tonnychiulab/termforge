@@ -6,6 +6,7 @@ const BULLET_RADIUS: f32 = 0.5;
 const ASTEROID_LARGE_RADIUS: f32 = 3.0;
 const ASTEROID_MEDIUM_RADIUS: f32 = 2.0;
 const ASTEROID_SMALL_RADIUS: f32 = 1.0;
+const EMP_BLAST_RADIUS: f32 = 22.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum AsteroidSize {
@@ -47,6 +48,7 @@ struct Ship {
     fire_cooldown: f32,
     invincible_timer: f32,
     alive: bool,
+    bombs: u32,
 }
 
 struct Bullet {
@@ -70,7 +72,10 @@ struct AsteroidsGame {
     lives: u32,
     wave: u32,
     game_over: bool,
+    paused: bool,
+    sound_muted: bool,
     respawn_timer: f32,
+    seed: u32,
 }
 
 impl Default for AsteroidsGame {
@@ -83,26 +88,34 @@ impl Default for AsteroidsGame {
                 fire_cooldown: 0.0,
                 invincible_timer: 3.0,
                 alive: true,
+                bombs: 1,
             },
             bullets: Vec::new(),
             asteroids: Vec::new(),
-            particles: ParticleEmitter::new(300),
+            particles: ParticleEmitter::new(400),
             score: 0,
             lives: 3,
             wave: 1,
             game_over: false,
+            paused: false,
+            sound_muted: false,
             respawn_timer: 0.0,
+            seed: 42,
         }
     }
 }
 
 impl AsteroidsGame {
+    fn pseudo_random(&mut self) -> f32 {
+        self.seed = self.seed.wrapping_mul(1664525).wrapping_add(1013904223);
+        (self.seed as f32) / (u32::MAX as f32)
+    }
+
     fn spawn_wave(&mut self, width: f32, height: f32) {
         self.asteroids.clear();
         let count = 3 + self.wave;
         for i in 0..count {
             let angle = (i as f32 / count as f32) * PI * 2.0;
-            // Spawn away from screen center
             let pos = Vec2::new(width * 0.5, height * 0.5) + Vec2::from_angle(angle) * (height * 0.4);
             let vel = Vec2::from_angle(angle + 1.2) * (4.0 + self.wave as f32 * 0.5);
             self.asteroids.push(Asteroid {
@@ -125,6 +138,65 @@ impl AsteroidsGame {
             pos.y -= height;
         }
     }
+
+    fn hyperspace(&mut self, width: f32, height: f32, sound_queue: &mut SoundEventQueue) {
+        self.particles.burst(self.ship.pos, 25, (4.0, 12.0), 0.6, &['✦', '·'], Color::BrightCyan);
+        self.ship.pos = Vec2::new(
+            5.0 + self.pseudo_random() * (width - 10.0),
+            5.0 + self.pseudo_random() * (height - 10.0),
+        );
+        self.ship.vel = Vec2::ZERO;
+        self.ship.invincible_timer = 1.5;
+        self.particles.burst(self.ship.pos, 20, (3.0, 8.0), 0.5, &['★', '✦'], Color::BrightGreen);
+        sound_queue.trigger("warp");
+    }
+
+    fn emp_blast(&mut self, sound_queue: &mut SoundEventQueue) {
+        self.ship.bombs -= 1;
+        sound_queue.trigger("emp");
+        self.particles.burst(self.ship.pos, 60, (8.0, 20.0), 0.8, &['#', '✦', '★', '·'], Color::BrightCyan);
+
+        let mut destroyed_asteroids = Vec::new();
+        let mut new_asteroids = Vec::new();
+
+        for (a_idx, asteroid) in self.asteroids.iter().enumerate() {
+            if self.ship.pos.distance(asteroid.pos) <= EMP_BLAST_RADIUS {
+                destroyed_asteroids.push(a_idx);
+                self.score += asteroid.size.score();
+
+                match asteroid.size {
+                    AsteroidSize::Large => {
+                        for k in [-1.0, 1.0] {
+                            new_asteroids.push(Asteroid {
+                                pos: asteroid.pos,
+                                vel: asteroid.vel.rotate(k * 1.2) * 1.5,
+                                size: AsteroidSize::Medium,
+                            });
+                        }
+                    }
+                    AsteroidSize::Medium => {
+                        for k in [-1.0, 1.0] {
+                            new_asteroids.push(Asteroid {
+                                pos: asteroid.pos,
+                                vel: asteroid.vel.rotate(k * 1.5) * 1.8,
+                                size: AsteroidSize::Small,
+                            });
+                        }
+                    }
+                    AsteroidSize::Small => {}
+                }
+            }
+        }
+
+        destroyed_asteroids.sort_unstable();
+        destroyed_asteroids.dedup();
+        for &idx in destroyed_asteroids.iter().rev() {
+            if idx < self.asteroids.len() {
+                self.asteroids.remove(idx);
+            }
+        }
+        self.asteroids.extend(new_asteroids);
+    }
 }
 
 impl Game for AsteroidsGame {
@@ -136,6 +208,20 @@ impl Game for AsteroidsGame {
     fn update(&mut self, ctx: &mut GameContext, dt: f32) {
         let width = ctx.width as f32;
         let height = ctx.height as f32;
+
+        // Pause Toggle
+        if ctx.input.just_pressed(Key::Char('p')) || ctx.input.just_pressed(Key::Char('P')) {
+            self.paused = !self.paused;
+        }
+
+        // Mute Toggle
+        if ctx.input.just_pressed(Key::Char('m')) || ctx.input.just_pressed(Key::Char('M')) {
+            self.sound_muted = !self.sound_muted;
+        }
+
+        if self.paused {
+            return;
+        }
 
         if self.game_over {
             if ctx.input.just_pressed(Key::Char('\n')) || ctx.input.just_pressed(Key::Char('r')) {
@@ -153,6 +239,7 @@ impl Game for AsteroidsGame {
             self.respawn_timer -= dt;
             if self.respawn_timer <= 0.0 && self.lives > 0 {
                 self.ship.alive = true;
+                self.ship.bombs = 1;
                 self.ship.pos = Vec2::new(width * 0.5, height * 0.5);
                 self.ship.vel = Vec2::ZERO;
                 self.ship.invincible_timer = 3.0;
@@ -161,7 +248,7 @@ impl Game for AsteroidsGame {
 
         // Ship Controls
         if self.ship.alive {
-            let rot_speed = 3.5;
+            let rot_speed = 3.8;
             if ctx.input.is_pressed(Key::Left) || ctx.input.is_pressed(Key::Char('a')) {
                 self.ship.angle -= rot_speed * dt;
             }
@@ -169,20 +256,54 @@ impl Game for AsteroidsGame {
                 self.ship.angle += rot_speed * dt;
             }
 
-            // Thrust
+            // Forward Thrust (W / Up)
             if ctx.input.is_pressed(Key::Up) || ctx.input.is_pressed(Key::Char('w')) {
-                let thrust = Vec2::from_angle(self.ship.angle) * 20.0;
+                let thrust = Vec2::from_angle(self.ship.angle) * 22.0;
                 self.ship.vel += thrust * dt;
                 self.ship.vel = self.ship.vel.clamp_length(18.0);
 
-                // Thrust particle trail
                 let tail_pos = self.ship.pos - Vec2::from_angle(self.ship.angle) * 1.5;
                 let particle_vel = -Vec2::from_angle(self.ship.angle) * 5.0 + Vec2::new(0.0, 0.5);
                 self.particles.emit(tail_pos, particle_vel, 0.25, '·', Color::BrightYellow);
             }
 
+            // Active Brake (S / Down)
+            if ctx.input.is_pressed(Key::Down) || ctx.input.is_pressed(Key::Char('s')) {
+                self.ship.vel *= (0.88_f32).powf(dt * 60.0);
+                let nose = self.ship.pos + Vec2::from_angle(self.ship.angle) * 1.0;
+                self.particles.emit(nose, Vec2::ZERO, 0.15, 'x', Color::BrightRed);
+            }
+
+            // Lateral Strafing (Q - Port, E - Starboard)
+            if ctx.input.is_pressed(Key::Char('q')) {
+                let left_normal = Vec2::new(-self.ship.angle.sin(), self.ship.angle.cos());
+                self.ship.vel += left_normal * 18.0 * dt;
+                self.ship.vel = self.ship.vel.clamp_length(18.0);
+            }
+            if ctx.input.is_pressed(Key::Char('e')) {
+                let right_normal = Vec2::new(self.ship.angle.sin(), -self.ship.angle.cos());
+                self.ship.vel += right_normal * 18.0 * dt;
+                self.ship.vel = self.ship.vel.clamp_length(18.0);
+            }
+
+            // 180° Flip (X)
+            if ctx.input.just_pressed(Key::Char('x')) || ctx.input.just_pressed(Key::Char('X')) {
+                self.ship.angle += PI;
+                self.particles.burst(self.ship.pos, 8, (2.0, 6.0), 0.2, &['·'], Color::BrightCyan);
+            }
+
+            // Hyperspace Jump (Z / H)
+            if ctx.input.just_pressed(Key::Char('z')) || ctx.input.just_pressed(Key::Char('h')) {
+                self.hyperspace(width, height, &mut ctx.sound_queue);
+            }
+
+            // EMP Smart Bomb (B / F)
+            if (ctx.input.just_pressed(Key::Char('b')) || ctx.input.just_pressed(Key::Char('f'))) && self.ship.bombs > 0 {
+                self.emp_blast(&mut ctx.sound_queue);
+            }
+
             // Drag
-            self.ship.vel *= (0.985_f32).powf(dt * 60.0);
+            self.ship.vel *= (0.988_f32).powf(dt * 60.0);
             self.ship.pos += self.ship.vel * dt;
             Self::wrap(&mut self.ship.pos, width, height);
 
@@ -195,13 +316,15 @@ impl Game for AsteroidsGame {
                 && self.ship.fire_cooldown <= 0.0
             {
                 self.ship.fire_cooldown = 0.15;
-                let bullet_vel = Vec2::from_angle(self.ship.angle) * 35.0;
+                let bullet_vel = Vec2::from_angle(self.ship.angle) * 36.0;
                 self.bullets.push(Bullet {
                     pos: self.ship.pos + Vec2::from_angle(self.ship.angle) * 1.2,
                     vel: bullet_vel,
                     lifetime: 1.2,
                 });
-                ctx.sound_queue.trigger("fire");
+                if !self.sound_muted {
+                    ctx.sound_queue.trigger("fire");
+                }
             }
         }
 
@@ -239,10 +362,9 @@ impl Game for AsteroidsGame {
                     destroyed_asteroids.push(a_idx);
                     self.score += asteroid.size.score();
 
-                    // Explosions
                     let p_count = match asteroid.size {
-                        AsteroidSize::Large => 25,
-                        AsteroidSize::Medium => 15,
+                        AsteroidSize::Large => 20,
+                        AsteroidSize::Medium => 14,
                         AsteroidSize::Small => 8,
                     };
                     self.particles.burst(
@@ -253,9 +375,7 @@ impl Game for AsteroidsGame {
                         &['*', '✦', '·'],
                         Color::BrightRed,
                     );
-                    ctx.sound_queue.trigger("hit");
 
-                    // Split asteroid
                     match asteroid.size {
                         AsteroidSize::Large => {
                             for k in [-1.0, 1.0] {
@@ -284,7 +404,10 @@ impl Game for AsteroidsGame {
             }
         }
 
-        // Remove destroyed entities
+        if !destroyed_bullets.is_empty() && !self.sound_muted {
+            ctx.sound_queue.trigger("hit");
+        }
+
         let mut b_indices = destroyed_bullets;
         b_indices.sort_unstable();
         b_indices.dedup();
@@ -329,7 +452,6 @@ impl Game for AsteroidsGame {
                     self.respawn_timer = 2.0;
                     self.lives = self.lives.saturating_sub(1);
 
-                    // Massive explosion
                     self.particles.burst(
                         self.ship.pos,
                         40,
@@ -338,7 +460,9 @@ impl Game for AsteroidsGame {
                         &['#', '%', '*', '✦'],
                         Color::BrightYellow,
                     );
-                    ctx.sound_queue.trigger("explosion");
+                    if !self.sound_muted {
+                        ctx.sound_queue.trigger("explosion");
+                    }
 
                     if self.lives == 0 {
                         self.game_over = true;
@@ -397,18 +521,32 @@ impl Game for AsteroidsGame {
             }
         }
 
-        // Draw HUD
+        // Enhanced HUD
         let score_str = format!(" SCORE: {} ", self.score);
-        let wave_str = format!(" WAVE: {} ", self.wave);
-        let mut lives_str = String::from(" LIVES: ");
+        let wave_str = format!(" W:{} ", self.wave);
+        let mut lives_str = String::from(" ");
         for _ in 0..self.lives {
             lives_str.push('♥');
         }
-        lives_str.push(' ');
+        let bomb_str = if self.ship.bombs > 0 { " EMP:[B] " } else { " EMP:-- " };
+        let snd_str = if self.sound_muted { " [M]OFF " } else { " [M]ON " };
 
         buffer.draw_text(1, 0, &score_str, Color::BrightYellow, Color::Reset);
-        buffer.draw_text(ctx.width / 2 - 5, 0, &lives_str, Color::BrightRed, Color::Reset);
+        buffer.draw_text(ctx.width / 2 - 9, 0, &lives_str, Color::BrightRed, Color::Reset);
+        buffer.draw_text(ctx.width / 2 - 1, 0, bomb_str, Color::BrightCyan, Color::Reset);
+        buffer.draw_text(ctx.width / 2 + 8, 0, snd_str, Color::BrightBlack, Color::Reset);
         buffer.draw_text(ctx.width.saturating_sub(wave_str.len() as u16 + 2), 0, &wave_str, Color::BrightCyan, Color::Reset);
+
+        // Pause Modal
+        if self.paused {
+            let center_x = ctx.width / 2;
+            let center_y = ctx.height / 2;
+            let banner = "=== PAUSED ===";
+            let sub = "Press P to Resume";
+            buffer.draw_rect(center_x.saturating_sub(18), center_y.saturating_sub(2), 36, 5, Color::BrightYellow);
+            buffer.draw_text(center_x.saturating_sub((banner.len() / 2) as u16), center_y.saturating_sub(1), banner, Color::BrightYellow, Color::Reset);
+            buffer.draw_text(center_x.saturating_sub((sub.len() / 2) as u16), center_y + 1, sub, Color::White, Color::Reset);
+        }
 
         // Draw Game Over Screen
         if self.game_over {

@@ -8,6 +8,7 @@ const BULLET_RADIUS: f32 = 0.5;
 const ASTEROID_LARGE_RADIUS: f32 = 3.0;
 const ASTEROID_MEDIUM_RADIUS: f32 = 2.0;
 const ASTEROID_SMALL_RADIUS: f32 = 1.0;
+const EMP_BLAST_RADIUS: f32 = 22.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum AsteroidSize {
@@ -49,6 +50,7 @@ struct Ship {
     fire_cooldown: f32,
     invincible_timer: f32,
     alive: bool,
+    bombs: u32,
 }
 
 struct Bullet {
@@ -73,12 +75,15 @@ pub struct WasmAsteroidsGame {
     lives: u32,
     wave: u32,
     game_over: bool,
+    paused: bool,
+    sound_muted: bool,
     respawn_timer: f32,
     width: u16,
     height: u16,
     double_buffer: DoubleBuffer,
     pressed_keys: HashSet<String>,
     sound_effect: Option<String>,
+    hyperspace_seed: u32,
 }
 
 #[wasm_bindgen]
@@ -93,29 +98,70 @@ impl WasmAsteroidsGame {
                 fire_cooldown: 0.0,
                 invincible_timer: 3.0,
                 alive: true,
+                bombs: 1,
             },
             bullets: Vec::new(),
             asteroids: Vec::new(),
-            particles: ParticleEmitter::new(300),
+            particles: ParticleEmitter::new(400),
             score: 0,
             lives: 3,
             wave: 1,
             game_over: false,
+            paused: false,
+            sound_muted: false,
             respawn_timer: 0.0,
             width,
             height,
             double_buffer: DoubleBuffer::new(width, height),
             pressed_keys: HashSet::new(),
             sound_effect: None,
+            hyperspace_seed: 12345,
         };
         game.spawn_wave();
         game
     }
 
     pub fn key_down(&mut self, key: &str) {
-        self.pressed_keys.insert(key.to_lowercase());
-        if self.game_over && (key == "Enter" || key == "r" || key == "R") {
+        let k = key.to_lowercase();
+        self.pressed_keys.insert(k.clone());
+
+        // Pause toggle
+        if k == "p" {
+            self.paused = !self.paused;
+            return;
+        }
+
+        // Mute toggle
+        if k == "m" {
+            self.sound_muted = !self.sound_muted;
+            return;
+        }
+
+        // Restart on Game Over
+        if self.game_over && (k == "enter" || k == "r") {
             self.reset();
+            return;
+        }
+
+        if self.paused || self.game_over || !self.ship.alive {
+            return;
+        }
+
+        // 180° Flip
+        if k == "x" {
+            self.ship.angle += PI;
+            // exhaust particle
+            self.particles.burst(self.ship.pos, 8, (2.0, 6.0), 0.2, &['·'], Color::BrightCyan);
+        }
+
+        // Hyperspace Teleport
+        if k == "z" || k == "h" {
+            self.hyperspace_jump();
+        }
+
+        // EMP Smart Bomb
+        if (k == "b" || k == "f") && self.ship.bombs > 0 {
+            self.trigger_emp_bomb();
         }
     }
 
@@ -123,14 +169,87 @@ impl WasmAsteroidsGame {
         self.pressed_keys.remove(&key.to_lowercase());
     }
 
+    fn pseudo_random(&mut self) -> f32 {
+        self.hyperspace_seed = self.hyperspace_seed.wrapping_mul(1664525).wrapping_add(1013904223);
+        (self.hyperspace_seed as f32) / (u32::MAX as f32)
+    }
+
+    fn hyperspace_jump(&mut self) {
+        let rand_x = 5.0 + self.pseudo_random() * (self.width as f32 - 10.0);
+        let rand_y = 5.0 + self.pseudo_random() * (self.height as f32 - 10.0);
+        
+        // Dissolve particles at old position
+        self.particles.burst(self.ship.pos, 25, (4.0, 12.0), 0.6, &['✦', '·'], Color::BrightCyan);
+        
+        self.ship.pos = Vec2::new(rand_x, rand_y);
+        self.ship.vel = Vec2::ZERO;
+        self.ship.invincible_timer = 1.5;
+
+        // Flash at new position
+        self.particles.burst(self.ship.pos, 20, (3.0, 8.0), 0.5, &['★', '✦'], Color::BrightGreen);
+        self.emit_sound("warp");
+    }
+
+    fn trigger_emp_bomb(&mut self) {
+        self.ship.bombs -= 1;
+        self.emit_sound("emp");
+
+        // 360-degree shockwave ring
+        self.particles.burst(self.ship.pos, 60, (8.0, 20.0), 0.8, &['#', '✦', '★', '·'], Color::BrightCyan);
+
+        let mut destroyed_asteroids = Vec::new();
+        let mut new_asteroids = Vec::new();
+
+        for (a_idx, asteroid) in self.asteroids.iter().enumerate() {
+            if self.ship.pos.distance(asteroid.pos) <= EMP_BLAST_RADIUS {
+                destroyed_asteroids.push(a_idx);
+                self.score += asteroid.size.score();
+                
+                // Blast split
+                match asteroid.size {
+                    AsteroidSize::Large => {
+                        for k in [-1.0, 1.0] {
+                            new_asteroids.push(Asteroid {
+                                pos: asteroid.pos,
+                                vel: asteroid.vel.rotate(k * 1.2) * 1.5,
+                                size: AsteroidSize::Medium,
+                            });
+                        }
+                    }
+                    AsteroidSize::Medium => {
+                        for k in [-1.0, 1.0] {
+                            new_asteroids.push(Asteroid {
+                                pos: asteroid.pos,
+                                vel: asteroid.vel.rotate(k * 1.5) * 1.8,
+                                size: AsteroidSize::Small,
+                            });
+                        }
+                    }
+                    AsteroidSize::Small => {}
+                }
+            }
+        }
+
+        destroyed_asteroids.sort_unstable();
+        destroyed_asteroids.dedup();
+        for &idx in destroyed_asteroids.iter().rev() {
+            if idx < self.asteroids.len() {
+                self.asteroids.remove(idx);
+            }
+        }
+        self.asteroids.extend(new_asteroids);
+    }
+
     pub fn reset(&mut self) {
         self.score = 0;
         self.lives = 3;
         self.wave = 1;
         self.game_over = false;
+        self.paused = false;
         self.respawn_timer = 0.0;
         self.bullets.clear();
         self.ship.alive = true;
+        self.ship.bombs = 1;
         self.ship.pos = Vec2::new(self.width as f32 * 0.5, self.height as f32 * 0.5);
         self.ship.vel = Vec2::ZERO;
         self.ship.angle = -PI * 0.5;
@@ -168,35 +287,44 @@ impl WasmAsteroidsGame {
         }
     }
 
+    fn emit_sound(&mut self, sfx: &str) {
+        if !self.sound_muted {
+            self.sound_effect = Some(sfx.into());
+        }
+    }
+
     /// Advance game state by dt and return the ANSI diff string to be passed into xterm.js
     pub fn tick(&mut self, dt: f32) -> String {
         let w = self.width as f32;
         let h = self.height as f32;
         self.sound_effect = None;
 
-        if !self.game_over {
+        if !self.game_over && !self.paused {
             // Respawn handling
             if !self.ship.alive {
                 self.respawn_timer -= dt;
                 if self.respawn_timer <= 0.0 && self.lives > 0 {
                     self.ship.alive = true;
+                    self.ship.bombs = 1; // Replenish EMP on respawn
                     self.ship.pos = Vec2::new(w * 0.5, h * 0.5);
                     self.ship.vel = Vec2::ZERO;
                     self.ship.invincible_timer = 3.0;
                 }
             }
 
-            // Ship inputs
+            // Ship inputs: Rotation
             if self.ship.alive {
-                let rot_speed = 3.5;
+                let rot_speed = 3.8;
                 if self.pressed_keys.contains("arrowleft") || self.pressed_keys.contains("a") {
                     self.ship.angle -= rot_speed * dt;
                 }
                 if self.pressed_keys.contains("arrowright") || self.pressed_keys.contains("d") {
                     self.ship.angle += rot_speed * dt;
                 }
+
+                // Forward Thrust (W / Up)
                 if self.pressed_keys.contains("arrowup") || self.pressed_keys.contains("w") {
-                    let thrust = Vec2::from_angle(self.ship.angle) * 20.0;
+                    let thrust = Vec2::from_angle(self.ship.angle) * 22.0;
                     self.ship.vel += thrust * dt;
                     self.ship.vel = self.ship.vel.clamp_length(18.0);
 
@@ -205,22 +333,44 @@ impl WasmAsteroidsGame {
                     self.particles.emit(tail, p_vel, 0.25, '·', Color::BrightYellow);
                 }
 
-                self.ship.vel *= (0.985_f32).powf(dt * 60.0);
+                // Active Braking (S / Down)
+                if self.pressed_keys.contains("arrowdown") || self.pressed_keys.contains("s") {
+                    self.ship.vel *= (0.88_f32).powf(dt * 60.0);
+                    // reverse brake sparkles
+                    let nose = self.ship.pos + Vec2::from_angle(self.ship.angle) * 1.0;
+                    self.particles.emit(nose, Vec2::ZERO, 0.15, 'x', Color::BrightRed);
+                }
+
+                // Lateral Strafing (Q - Left, E - Right)
+                if self.pressed_keys.contains("q") {
+                    let left_normal = Vec2::new(-self.ship.angle.sin(), self.ship.angle.cos());
+                    self.ship.vel += left_normal * 18.0 * dt;
+                    self.ship.vel = self.ship.vel.clamp_length(18.0);
+                }
+                if self.pressed_keys.contains("e") {
+                    let right_normal = Vec2::new(self.ship.angle.sin(), -self.ship.angle.cos());
+                    self.ship.vel += right_normal * 18.0 * dt;
+                    self.ship.vel = self.ship.vel.clamp_length(18.0);
+                }
+
+                // Drag
+                self.ship.vel *= (0.988_f32).powf(dt * 60.0);
                 self.ship.pos += self.ship.vel * dt;
                 Self::wrap(&mut self.ship.pos, w, h);
 
                 self.ship.fire_cooldown -= dt;
                 self.ship.invincible_timer -= dt;
 
+                // Fire
                 if self.pressed_keys.contains(" ") && self.ship.fire_cooldown <= 0.0 {
                     self.ship.fire_cooldown = 0.15;
-                    let bullet_vel = Vec2::from_angle(self.ship.angle) * 35.0;
+                    let bullet_vel = Vec2::from_angle(self.ship.angle) * 36.0;
                     self.bullets.push(Bullet {
                         pos: self.ship.pos + Vec2::from_angle(self.ship.angle) * 1.2,
                         vel: bullet_vel,
                         lifetime: 1.2,
                     });
-                    self.sound_effect = Some("fire".into());
+                    self.emit_sound("fire");
                 }
             }
 
@@ -258,15 +408,19 @@ impl WasmAsteroidsGame {
                         destroyed_asteroids.push(a_idx);
                         self.score += asteroid.size.score();
 
+                        let p_count = match asteroid.size {
+                            AsteroidSize::Large => 20,
+                            AsteroidSize::Medium => 14,
+                            AsteroidSize::Small => 8,
+                        };
                         self.particles.burst(
                             asteroid.pos,
-                            18,
+                            p_count,
                             (3.0, 10.0),
                             0.5,
                             &['*', '✦', '·'],
                             Color::BrightRed,
                         );
-                        self.sound_effect = Some("hit".into());
 
                         match asteroid.size {
                             AsteroidSize::Large => {
@@ -294,6 +448,10 @@ impl WasmAsteroidsGame {
                         break;
                     }
                 }
+            }
+
+            if !destroyed_bullets.is_empty() {
+                self.emit_sound("hit");
             }
 
             let mut b_indices = destroyed_bullets;
@@ -338,7 +496,7 @@ impl WasmAsteroidsGame {
                             &['#', '%', '*', '✦'],
                             Color::BrightYellow,
                         );
-                        self.sound_effect = Some("explosion".into());
+                        self.emit_sound("explosion");
 
                         if self.lives == 0 {
                             self.game_over = true;
@@ -399,30 +557,44 @@ impl WasmAsteroidsGame {
             }
         }
 
-        // HUD
+        // Enhanced HUD
         let score_str = format!(" SCORE: {} ", self.score);
-        let wave_str = format!(" WAVE: {} ", self.wave);
-        let mut lives_str = String::from(" LIVES: ");
+        let wave_str = format!(" W:{} ", self.wave);
+        let mut lives_str = String::from(" ");
         for _ in 0..self.lives {
             lives_str.push('♥');
         }
-        lives_str.push(' ');
+        let bomb_str = if self.ship.bombs > 0 { " EMP:[B] " } else { " EMP:-- " };
+        let snd_str = if self.sound_muted { " [M]OFF " } else { " [M]ON " };
 
         self.double_buffer.back.draw_text(1, 0, &score_str, Color::BrightYellow, Color::Reset);
-        self.double_buffer.back.draw_text(self.width / 2 - 5, 0, &lives_str, Color::BrightRed, Color::Reset);
+        self.double_buffer.back.draw_text(self.width / 2 - 9, 0, &lives_str, Color::BrightRed, Color::Reset);
+        self.double_buffer.back.draw_text(self.width / 2 - 1, 0, bomb_str, Color::BrightCyan, Color::Reset);
+        self.double_buffer.back.draw_text(self.width / 2 + 8, 0, snd_str, Color::BrightBlack, Color::Reset);
         self.double_buffer.back.draw_text(self.width.saturating_sub(wave_str.len() as u16 + 2), 0, &wave_str, Color::BrightCyan, Color::Reset);
 
+        // Pause Modal
+        if self.paused {
+            let center_x = self.width / 2;
+            let center_y = self.height / 2;
+            let banner = "=== PAUSED ===";
+            let sub = "Press P to Resume";
+            self.double_buffer.back.draw_rect(center_x.saturating_sub(18), center_y.saturating_sub(2), 36, 5, Color::BrightYellow);
+            self.double_buffer.back.draw_text(center_x.saturating_sub((banner.len() / 2) as u16), center_y.saturating_sub(1), banner, Color::BrightYellow, Color::Reset);
+            self.double_buffer.back.draw_text(center_x.saturating_sub((sub.len() / 2) as u16), center_y + 1, sub, Color::White, Color::Reset);
+        }
+
+        // Game Over Modal
         if self.game_over {
             let center_x = self.width / 2;
             let center_y = self.height / 2;
             let banner = "=== GAME OVER ===";
             let sub = "Press ENTER / R to Restart";
-            self.double_buffer.back.draw_rect(center_x.saturating_sub(25), center_y.saturating_sub(3), 50, 7, Color::BrightRed);
+            self.double_buffer.back.draw_rect(center_x.saturating_sub(22), center_y.saturating_sub(3), 44, 7, Color::BrightRed);
             self.double_buffer.back.draw_text(center_x.saturating_sub((banner.len() / 2) as u16), center_y.saturating_sub(1), banner, Color::BrightRed, Color::Reset);
             self.double_buffer.back.draw_text(center_x.saturating_sub((sub.len() / 2) as u16), center_y + 1, sub, Color::White, Color::Reset);
         }
 
-        // Return ANSI diff string directly to JS
         self.double_buffer.flush_to_string()
     }
 

@@ -53,16 +53,24 @@
 
 ---
 
-## 🎮 操作指南
+## 🎮 操作指南 (Controls)
 
-| 按鍵 | 動作說明 | 特效與回饋 |
+| 按鍵 (Key) | 動作說明 (Action) | 特效與機制 (Feedback & Mechanics) |
 | :--- | :--- | :--- |
-| <kbd>W</kbd> 或 <kbd>↑</kbd> | **推進加速 (Thrust)** | 向量慣性加速度，船尾噴射微粒火花動畫 |
+| <kbd>W</kbd> 或 <kbd>↑</kbd> | **推進加速 (Thrust)** | 順向向量加速度，船尾噴射微粒火花動畫 |
+| <kbd>S</kbd> 或 <kbd>↓</kbd> | **主動煞車 (Brake)** | 主動逆向減速，急速降低慣性速度避免撞毀 |
 | <kbd>A</kbd> 或 <kbd>←</kbd> | **逆時針旋轉 (Rotate Left)** | 8 方向平滑旋轉與船身 ASCII 符號即時切換 |
 | <kbd>D</kbd> 或 <kbd>→</kbd> | **順時針旋轉 (Rotate Right)** | 8 方向平滑旋轉與船身 ASCII 符號即時切換 |
-| <kbd>Space</kbd> | **發射電漿砲 (Fire)** | 冷卻射速限制，內建 Web Audio 激光音效 |
+| <kbd>Q</kbd> | **左側平移 (Strafe Left)** | 垂直朝左側橫向噴射，戰術繞圈狗鬥 |
+| <kbd>E</kbd> | **右側平移 (Strafe Right)** | 垂直朝右側橫向噴射，戰術繞圈狗鬥 |
+| <kbd>X</kbd> | **180° 瞬間回頭 (Flip)** | 一鍵瞬間反轉 180 度反咬追擊的小行星 |
+| <kbd>Z</kbd> 或 <kbd>H</kbd> | **超空間瞬移 (Hyperspace)** | 突發狀況隨機傳送至安全區域，帶 1.5 秒護盾 |
+| <kbd>Space</kbd> | **發射電漿砲 (Fire)** | 冷卻連發，內建 8-bit Web Audio 激光音效 |
+| <kbd>B</kbd> 或 <kbd>F</kbd> | **全屏 EMP 震撼彈 (Bomb)** | 每條命可用 1 次，引爆全場近身威脅並觸發圓環衝擊波 |
+| <kbd>P</kbd> | **暫停 / 繼續 (Pause)** | 隨時切換暫停狀態 |
+| <kbd>M</kbd> | **靜音切換 (Mute)** | 切換音效輸出開關 |
 | <kbd>R</kbd> 或 <kbd>Enter</kbd> | **重新開始 (Restart)** | Game Over 後快速重啟全新戰局 |
-| <kbd>Ctrl</kbd> + <kbd>Q</kbd> / <kbd>Esc</kbd> | **離開遊戲 (Quit)** | 安全退出遊戲並還原終端機 |
+| <kbd>Ctrl</kbd> + <kbd>Q</kbd> / <kbd>Esc</kbd> | **離開遊戲 (Quit)** | 安全退出遊戲並還原終端機 (原生版) |
 
 ---
 
@@ -116,6 +124,11 @@ cargo test --workspace
   - [`specs/web-support.md`](openspec/changes/add-web-wasm-support/specs/web-support.md) — WASM 橋接、觸控支援與驗收情境
   - [`design.md`](openspec/changes/add-web-wasm-support/design.md) — 記憶體字串 Diff 輸出與 CSS CRT 著色架構
   - [`tasks.md`](openspec/changes/add-web-wasm-support/tasks.md) — 網頁實作與自動化部屬檢核表 (100% 完成)
+- **變更 3：九宮格戰術機動與特殊技能 (`enhanced-controls-and-abilities`)**
+  - [`proposal.md`](openspec/changes/enhanced-controls-and-abilities/proposal.md) — 戰術操控與技能系統規劃
+  - [`specs/controls-and-abilities.md`](openspec/changes/enhanced-controls-and-abilities/specs/controls-and-abilities.md) — 煞車、側移、180° 翻轉、瞬移與 EMP 炸彈規範
+  - [`design.md`](openspec/changes/enhanced-controls-and-abilities/design.md) — 運動力學向量與能力冷卻狀態機
+  - [`tasks.md`](openspec/changes/enhanced-controls-and-abilities/tasks.md) — 實作檢核表 (100% 完成)
 
 ---
 
