@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -33,10 +33,91 @@
   </div>
   <div style="display: flex; gap: 8px; flex-wrap: wrap;">
     <button class="touch-btn" id="btn-thrust" style="color: var(--crt-amber); padding: 10px 14px;">▲ W</button>
-    <button class="touch-btn" id="btn-brake" style="color: #ff6666; padding: 10px 14px;">▼ S</button>
+    <button class="touch-btn" id="btn-brake" style="color: var(--crt-red); padding: 10px 14px;">▼ S</button>
     <button class="touch-btn" id="btn-fire" style="color: var(--crt-cyan); padding: 10px 16px;">● SPACE</button>
-    <button class="touch-btn" id="btn-emp" style="color: #df80ff; padding: 10px 14px;">💣 EMP</button>
+    <button class="touch-btn" id="btn-emp" style="color: var(--crt-pink); padding: 10px 14px;">💣 EMP</button>
     <button class="touch-btn" id="btn-pause" style="color: #ffd24d; padding: 10px 12px;">⏸ P</button>
+  </div>
+</div>
+
+<!-- Controls & Tactical Abilities Cheat Sheet Card -->
+<div class="controls-cheat-sheet">
+  <div class="cheat-sheet-header">
+    <span>🕹️ 戰術操作指南 (TACTICAL FLIGHT MANUAL)</span>
+    <span style="font-size: 11px; color: var(--crt-green);">● 九宮格戰術機動就緒</span>
+  </div>
+
+  <div class="cheat-grid">
+    <!-- Column 1: Flight Maneuvers -->
+    <div class="cheat-column">
+      <div class="col-title" style="color: var(--crt-amber);">
+        <span>🚀 飛行與機動 (Flight)</span>
+      </div>
+      <div class="key-list">
+        <div class="key-item">
+          <span class="key-badge badge-thrust">W</span> <span class="key-badge badge-thrust">↑</span>
+          <div class="key-desc">前進推進 <span>(Forward Thrust)</span></div>
+        </div>
+        <div class="key-item">
+          <span class="key-badge badge-brake">S</span> <span class="key-badge badge-brake">↓</span>
+          <div class="key-desc">主動煞車 <span>(Active Brake 減速避險)</span></div>
+        </div>
+        <div class="key-item">
+          <span class="key-badge">A</span> <span class="key-badge">D</span>
+          <div class="key-desc">左右轉向 <span>(Rotate Left / Right)</span></div>
+        </div>
+        <div class="key-item">
+          <span class="key-badge">Q</span> <span class="key-badge">E</span>
+          <div class="key-desc">左右側移 <span>(Lateral Strafe 繞圈狗鬥)</span></div>
+        </div>
+        <div class="key-item">
+          <span class="key-badge">X</span>
+          <div class="key-desc">180°瞬間掉頭 <span>(Quick Turnaround)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 2: Combat Abilities -->
+    <div class="cheat-column">
+      <div class="col-title" style="color: var(--crt-cyan);">
+        <span>⚡ 戰術與特技 (Combat)</span>
+      </div>
+      <div class="key-list">
+        <div class="key-item">
+          <span class="key-badge badge-combat">Space</span>
+          <div class="key-desc">主砲射擊 <span>(Plasma Fire 連發電漿砲)</span></div>
+        </div>
+        <div class="key-item">
+          <span class="key-badge badge-bomb">B</span> <span class="key-badge badge-bomb">F</span>
+          <div class="key-desc">全屏 EMP 炸彈 <span>(Smart Bomb 每條命1次)</span></div>
+        </div>
+        <div class="key-item">
+          <span class="key-badge badge-combat">Z</span> <span class="key-badge badge-combat">H</span>
+          <div class="key-desc">超空間瞬移 <span>(Hyperspace 帶1.5s護盾)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: System Controls -->
+    <div class="cheat-column">
+      <div class="col-title" style="color: #8b949e;">
+        <span>⚙️ 系統與輔助 (System)</span>
+      </div>
+      <div class="key-list">
+        <div class="key-item">
+          <span class="key-badge badge-sys">P</span>
+          <div class="key-desc">暫停 / 繼續 <span>(Pause Toggle)</span></div>
+        </div>
+        <div class="key-item">
+          <span class="key-badge badge-sys">M</span>
+          <div class="key-desc">音效開關 <span>(Sound Mute / Unmute)</span></div>
+        </div>
+        <div class="key-item">
+          <span class="key-badge badge-sys">R</span> <span class="key-badge badge-sys">Enter</span>
+          <div class="key-desc">重新開局 <span>(Restart on Game Over)</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
