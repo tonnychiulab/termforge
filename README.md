@@ -96,6 +96,8 @@ cargo test --workspace
 
 推送 `main` 後，工作流程 [Build & Deploy WebAssembly Game](.github/workflows/deploy.yml) 會編譯 WASM，把 `dist/` 寫入 `gh-pages`。請不要改用「GitHub Actions 作為 Pages 來源」或 `actions/deploy-pages`，除非先把 Pages 設定與 environment 允許的分支一併改掉。
 
+試玩頁的 xterm.js 放在 `dist/vendor/`，執行期不載入 CDN。GitHub Pages 不會套用 `_headers` 這類檔案，說明見 [`dist/GITHUB-PAGES-HEADERS.md`](dist/GITHUB-PAGES-HEADERS.md)。
+
 安全初測公開摘要：[`docs/security/source-code-review-2026-09-17.md`](docs/security/source-code-review-2026-09-17.md)
 
 ---

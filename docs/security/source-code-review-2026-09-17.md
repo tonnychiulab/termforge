@@ -12,7 +12,9 @@
 | 審查模型 | Cursor Grok 4.6 |
 | 版本 | 公開稿 v0.1 |
 
-追蹤討論：[#2](https://github.com/tonnychiulab/termforge/issues/2)。TF-01（發布路徑不一致）由對應 PR 處理：GitHub Actions 建置 WASM 後寫入 `gh-pages`，與 GitHub Pages 實際來源對齊。
+追蹤討論：[#2](https://github.com/tonnychiulab/termforge/issues/2)。
+
+**後續處理：** TF-01 已在 PR #3 對齊發布路徑。TF-02 改為 `dist/vendor/` 自託管 xterm.js（執行期不再載入 jsDelivr）。TF-03 刪除 GitHub Pages 不會套用的 `_headers`，改以 CSP／referrer meta 與 `framebust.js`；平台仍無法送出 `X-Frame-Options`。
 
 ## 摘要
 
@@ -52,7 +54,7 @@ TermForge 是本機終端機遊戲引擎與靜態 WASM 示範，**沒有帳號�
 - **面向：** 可用性、完整性
 - **位置：** `.github/workflows/deploy.yml`；GitHub Pages 設定
 - **影響：** 維護者可能以為推送 `main` 就會更新線上試玩。實際託管來源是 `gh-pages` 分支，修補若只進 `main`，玩家不一定拿得到。
-- **處理：** 改為 Actions 在 `main` 建置後把 `dist/` 發布到 `gh-pages`（Pages 本來就從此分支供應）。TF-02、TF-03 仍待後續。
+- **處理：** 已改為 Actions 在 `main` 建置後把 `dist/` 發布到 `gh-pages`（PR #3）。
 
 ### TF-02 低 — 網頁版第三方腳本缺少完整性校驗
 
@@ -60,6 +62,7 @@ TermForge 是本機終端機遊戲引擎與靜態 WASM 示範，**沒有帳號�
 - **位置：** `dist/index.html`（jsDelivr 上的 xterm.js）
 - **影響：** 若該 CDN 物件被替換，訪客瀏覽器會在試玩頁執行非預期腳本。本頁沒有帳號或機密可偷，影響主要是頁面被竄改。
 - **建議：** 改為專案內自託管，或為 CDN 資源加上 Subresource Integrity，並考慮 Content-Security-Policy。
+- **處理：** 已自託管 `@xterm/xterm@5.5.0` 與 `@xterm/addon-fit@0.10.0` 於 `dist/vendor/`，並加上僅允許 `'self'` 的 CSP meta。
 
 ### TF-03 低 — 倉庫中的安全標頭檔在 GitHub Pages 未生效
 
@@ -67,6 +70,7 @@ TermForge 是本機終端機遊戲引擎與靜態 WASM 示範，**沒有帳號�
 - **位置：** `dist/_headers`
 - **影響：** 線上回應沒有該檔所宣稱的安全標頭；頁面可被其他網站嵌入。此示範沒有登入動作，點擊劫持價值有限。
 - **建議：** 不要把 GitHub Pages 上的 `_headers` 當成已套用的控制。若需要 HTTP 標頭，改用支援該機制的託管，或在文件中說明限制。
+- **處理：** 已刪除會造成誤解的 `dist/_headers`；改以 CSP／referrer meta、`framebust.js` 與 `dist/GITHUB-PAGES-HEADERS.md` 說明平台限制。
 
 ## NIST AI 與 OWASP AI（公開摘要）
 
