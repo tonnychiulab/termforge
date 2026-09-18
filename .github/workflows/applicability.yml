@@ -1,21 +1,24 @@
 # Applicability merge gate. Not Open Code Review.
 # Write-time: openspec/specs/secure-by-construction.md and
 # .cursor/skills/secure-by-construction/SKILL.md
-# Uses pull_request, not pull_request_target. No repository secrets.
-# Run the checker from the PR base (usually main) so a PR cannot
-# neuter the gate by rewriting this workflow's script.
+# pull_request_target runs this YAML from the base branch so a PR
+# cannot rewrite the gate. No repository secrets. Do not execute
+# files from the PR tree; only parse them as data.
+# Keep pull_request so this change can land while base still lists it.
 
 name: Applicability gate
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
 
 concurrency:
-  group: applicability-${{ github.event.pull_request.number }}
+  group: applicability-${{ github.event.pull_request.number }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -23,33 +26,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Checkout PR tree
+      - name: Checkout trusted checker from the PR base
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Checkout PR tree as data only
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           path: pr
+          persist-credentials: false
 
-      - name: Fetch base branch
+      - name: Fetch base branch for the diff
         run: git fetch --no-tags origin ${{ github.base_ref }}
         working-directory: pr
 
-      - name: Load checker from base
-        run: |
-          set -euo pipefail
-          mkdir -p gate/scripts
-          base_ref="origin/${{ github.base_ref }}"
-          if git -C pr cat-file -e "${base_ref}:scripts/check-secure-by-construction-applicability.py"; then
-            git -C pr show "${base_ref}:scripts/check-secure-by-construction-applicability.py" \
-              > gate/scripts/check-secure-by-construction-applicability.py
-            echo "Using checker from ${base_ref}"
-          else
-            cp pr/scripts/check-secure-by-construction-applicability.py \
-              gate/scripts/check-secure-by-construction-applicability.py
-            echo "Base has no checker yet; using PR copy (bootstrap only)"
-          fi
-
       - name: Self-test checker
-        run: python3 gate/scripts/check-secure-by-construction-applicability.py --self-test
+        run: python3 scripts/check-secure-by-construction-applicability.py --self-test
 
       - name: Require 適用表 on gated paths
-        run: python3 gate/scripts/check-secure-by-construction-applicability.py --root pr --base origin/${{ github.base_ref }}
+        run: python3 scripts/check-secure-by-construction-applicability.py --root pr --base origin/${{ github.base_ref }}

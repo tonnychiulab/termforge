@@ -9,7 +9,7 @@
 - [x] 2.1 新增 `.github/workflows/applicability.yml`（`pull_request`、無 secrets、timeout ≤ 5 分鐘）
 - [x] 2.2 不用 `pull_request_target`；不把 diff 送 LLM
 - [x] 2.3 檢查腳本從 base 載入（base 無檔時才用 PR 複本）
-- [ ] 2.4 合進 `main` 後啟用 GitHub ruleset：必須 PR、禁止 force-push、require workflows from default branch
+- [x] 2.4 合進 `main` 後啟用 GitHub ruleset：必須 PR、禁止 force-push、require `applicability` status check（ruleset id 23657125）
 
 ## 3. 新人入口
 - [x] 3.1 README 繁中／英文寫 clone → Open Folder、skill 在倉內、先填適用表、Open Code Review（阿里雲）在 GitHub
