@@ -29,6 +29,7 @@ Security scenes exist **before** implementation code. Read the OpenSpec baseline
 2. Any of the seven clauses neither 適用 nor 不適用 with a reason? **STOP.**
 3. 適用 but no GIVEN/WHEN/THEN about **this** change? **STOP.**
 4. About to complete feature tasks while 適用 security tasks are empty? **STOP.**
+5. CI job `applicability` will fail the PR if gated files (Rust, `dist/`, Actions, this skill, the baseline spec) land without that table. Missing scenes is not something later review will fix.
 
 **Exit:** every clause is marked and 適用 scenes exist. Only then implement.
 
@@ -37,7 +38,7 @@ Security scenes exist **before** implementation code. Read the OpenSpec baseline
 **Entry:** Phase 2 passed.
 
 1. Implement only what the scenes allow.
-2. Do not start a CIA report, Open Code Review, Codex Security, or a review skill. Those are after-the-fact nets (CI may run OCR on the PR).
+2. Do not start a CIA report, Open Code Review（阿里雲）, Codex Security, or a review skill. Those are after-the-fact nets (CI may run Open Code Review on the PR).
 
 **Exit:** the diff matches the scenes.
 

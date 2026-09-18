@@ -1,0 +1,36 @@
+# Applicability merge gate. Not Open Code Review.
+# Write-time: openspec/specs/secure-by-construction.md and
+# .cursor/skills/secure-by-construction/SKILL.md
+# Uses pull_request, not pull_request_target. No repository secrets.
+
+name: Applicability gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: applicability-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  applicability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        run: git fetch --no-tags origin ${{ github.base_ref }}
+
+      - name: Self-test checker
+        run: python3 scripts/check-secure-by-construction-applicability.py --self-test
+
+      - name: Require 適用表 on gated paths
+        run: python3 scripts/check-secure-by-construction-applicability.py --base origin/${{ github.base_ref }}

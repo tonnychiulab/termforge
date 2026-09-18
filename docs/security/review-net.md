@@ -4,9 +4,10 @@ TermForge 的安全順序是：
 
 1. **撰寫時：** `openspec/specs/secure-by-construction.md` + OpenSpec change 的適用表  
 2. **動手時：** `.cursor/skills/secure-by-construction/SKILL.md`  
-3. **寫完之後（本檔）：** PR 上的 Open Code Review，可選 Codex Security  
+3. **合併門檻：** `.github/workflows/applicability.yml` 檢查適用表（缺表則紅燈）。這不是本檔的審查網。維護者若要擋住 Merge 按鈕，需在 Branch protection 把 `Applicability gate` 設為 required。  
+4. **寫完之後（本檔）：** PR 上的 Open Code Review（阿里雲），可選 Codex Security  
 
-第 3 層只抓規格漏掉的缺陷。不要把它當成新人訓練，也不要當成唯一安全流程。不要為此重造審查 MCP。
+第 4 層只抓規格漏掉的缺陷。不要把它當成新人訓練，也不要當成唯一安全流程，更不要把它當成合併門檻。不要為此重造審查 MCP。
 
 ## Open Code Review（已接 CI）
 

@@ -16,7 +16,7 @@
 [![Wasm Size](https://img.shields.io/badge/Wasm_Size-76_KB-brightgreen.svg?style=flat-square)](#)
 [![OpenSpec SDD](https://img.shields.io/badge/Spec--Driven-OpenSpec_Compliant-purple.svg?style=flat-square)](https://github.com/Fission-AI/openspec)
 
-[繁體中文](#-繁體中文說明) · [English](#-english-documentation) · [OpenSpec 規範](#-openspec-sdd-規格驅動開發文件)
+[繁體中文](#-繁體中文說明) · [English](#-english-documentation) · [新人／Cursor](#-新人cursor撰寫時安全) · [OpenSpec 規範](#-openspec-sdd-規格驅動開發文件)
 
 ---
 
@@ -90,6 +90,18 @@ cargo run --release -p asteroids
 cargo test --workspace
 ```
 
+## 🛡️ 新人／Cursor：撰寫時安全
+
+新電腦裝好 Cursor 之後，**不必再裝 MCP、也不必把 skill 拷到個人目錄**。防禦跟這個 Git 倉庫走。
+
+1. `git clone` 本倉，用 Cursor 的 **Open Folder** 打開整個資料夾（不要只開單一檔案）。
+2. 專案 skill 已在 [`.cursor/skills/secure-by-construction/SKILL.md`](.cursor/skills/secure-by-construction/SKILL.md)。用 Cursor Agent 做實作、網頁、CI、輸入或 WASM 時會載入；請不要複製到 `~/.cursor/skills/`，否則對不到本倉的 OpenSpec。
+3. 開功能前先新增 `openspec/changes/<名稱>/`，在 `design.md` 填 **基線條款適用表**（七款都標「適用」或「不適用」加原因）。契約正文：[openspec/specs/secure-by-construction.md](openspec/specs/secure-by-construction.md)。
+4. 改 Rust、`dist/`、GitHub Actions、skill 或基線規格的 PR，CI 工作流程 [Applicability gate](.github/workflows/applicability.yml) 會檢查適用表；缺表則紅燈。這是合併門檻，不是審查工具。維護者若要擋住 GitHub 的 Merge 按鈕，需在 Branch protection 勾選此檢查。
+5. [Open Code Review（阿里雲）](docs/security/review-net.md) 跑在 GitHub Actions，**不在你的筆電上**。不必為它裝套件；token 只由維護者設在倉庫 Secrets。它是寫完之後的可選網，不是教材。
+
+沒有 OpenSpec change、適用表沒填完，就不要寫實作。人類與 AI 同一套規則。
+
 ## 🌐 網頁試玩如何更新
 
 線上試玩頁 https://tonnychiulab.github.io/termforge/ 由 GitHub Pages 的 **`gh-pages` 分支**供應。
@@ -118,6 +130,10 @@ PR 事後審查網（可選，不是撰寫時教材）：[`docs/security/review-
 - **WebAssembly + Retro CRT**: Runs at 60 FPS in browsers via `xterm.js` and WebAssembly with authentic CRT phosphor glow and scanlines.
 
 The live demo at https://tonnychiulab.github.io/termforge/ is served from the **`gh-pages` branch**. Pushes to `main` rebuild WASM and update that branch.
+
+### New machine, Cursor already installed
+
+Clone this repo and **Open Folder** on the whole directory. The write-time skill lives at [`.cursor/skills/secure-by-construction/SKILL.md`](.cursor/skills/secure-by-construction/SKILL.md); do not copy it to `~/.cursor/skills/`. Open an OpenSpec change and fill the seven-clause 適用／不適用 table in `design.md` before implementation. PRs that touch code, `dist/`, Actions, or the baseline spec fail [Applicability gate](.github/workflows/applicability.yml) without that table. [Open Code Review (Alibaba Cloud)](docs/security/review-net.md) runs on GitHub, not on your laptop; it is an optional after-the-fact net, not a merge gate.
 
 ---
 
@@ -148,6 +164,14 @@ The live demo at https://tonnychiulab.github.io/termforge/ is served from the **
   - [`specs/controls-cheat-sheet.md`](openspec/changes/add-in-page-controls-cheat-sheet/specs/controls-cheat-sheet.md) — 響應式佈局與繁中英文對照規範
   - [`design.md`](openspec/changes/add-in-page-controls-cheat-sheet/design.md) — 霓虹微排版與三欄式網格設計
   - [`tasks.md`](openspec/changes/add-in-page-controls-cheat-sheet/tasks.md) — 實作檢核表 (100% 完成)
+- **變更 5：撰寫時安全基線 (`add-secure-by-construction`)**
+  - 現行規格：[`openspec/specs/secure-by-construction.md`](openspec/specs/secure-by-construction.md)
+- **變更 6：撰寫時 skill (`add-write-time-security-skill`)**
+  - [`.cursor/skills/secure-by-construction/SKILL.md`](.cursor/skills/secure-by-construction/SKILL.md)
+- **變更 7：PR 可選審查網 (`add-pr-review-net`)**
+  - [`docs/security/review-net.md`](docs/security/review-net.md) — Open Code Review（阿里雲）；不是合併門檻
+- **變更 8：適用表合併門檻與新人 README (`add-applicability-merge-gate`)**
+  - [`.github/workflows/applicability.yml`](.github/workflows/applicability.yml)
 
 ---
 
