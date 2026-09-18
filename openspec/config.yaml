@@ -37,3 +37,4 @@ rules:
     - Each 適用 security scenario maps to at least one checkbox
     - 未驗證不得勾完成 (including checks that the live publish source matches the docs)
     - Do not mark feature tasks complete while leaving security tasks empty for later
+    - CI job applicability fails the PR when gated paths change without a complete 基線條款適用表; GitHub ruleset on main is the merge lock (not the skill, not Open Code Review（阿里雲）)
