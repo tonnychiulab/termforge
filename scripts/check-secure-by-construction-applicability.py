@@ -48,7 +48,7 @@ GATED_NAMES = frozenset(
 )
 GATED_SUFFIXES = (".rs",)
 
-ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def posix(path: str) -> str:
@@ -221,6 +221,7 @@ def main(argv: list[str]) -> int:
 
     base = None
     skip_diff = False
+    root = DEFAULT_ROOT
     args = list(argv)
     while args:
         arg = args.pop(0)
@@ -228,6 +229,11 @@ def main(argv: list[str]) -> int:
             base = args.pop(0) if args else None
         elif arg == "--skip-diff":
             skip_diff = True
+        elif arg == "--root":
+            if not args:
+                print("missing --root path", file=sys.stderr)
+                return 2
+            root = Path(args.pop(0)).resolve()
         else:
             print(f"unknown argument: {arg}", file=sys.stderr)
             return 2
@@ -241,11 +247,11 @@ def main(argv: list[str]) -> int:
     if skip_diff:
         changed = None
     elif base:
-        changed = git_changed_files(ROOT, base)
+        changed = git_changed_files(root, base)
     else:
         changed = None
 
-    errors = evaluate(root=ROOT, changed_files=changed)
+    errors = evaluate(root=root, changed_files=changed)
     if errors:
         for item in errors:
             print(f"FAIL {item}", file=sys.stderr)

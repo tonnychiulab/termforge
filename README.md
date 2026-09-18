@@ -97,7 +97,7 @@ cargo test --workspace
 1. `git clone` 本倉，用 Cursor 的 **Open Folder** 打開整個資料夾（不要只開單一檔案）。
 2. 專案 skill 已在 [`.cursor/skills/secure-by-construction/SKILL.md`](.cursor/skills/secure-by-construction/SKILL.md)。用 Cursor Agent 做實作、網頁、CI、輸入或 WASM 時會載入；請不要複製到 `~/.cursor/skills/`，否則對不到本倉的 OpenSpec。
 3. 開功能前先新增 `openspec/changes/<名稱>/`，在 `design.md` 填 **基線條款適用表**（七款都標「適用」或「不適用」加原因）。契約正文：[openspec/specs/secure-by-construction.md](openspec/specs/secure-by-construction.md)。
-4. 改 Rust、`dist/`、GitHub Actions、skill 或基線規格的 PR，CI 工作流程 [Applicability gate](.github/workflows/applicability.yml) 會檢查適用表；缺表則紅燈。這是合併門檻，不是審查工具。維護者若要擋住 GitHub 的 Merge 按鈕，需在 Branch protection 勾選此檢查。
+4. **Skill 出場與否不影響能不能進 `main`。** 在 GitHub 網頁改檔、不用 Agent、或說「先改再說」，skill 都不會跑。擋這些路的是 GitHub ruleset：不能直推 `main`、不能 force-push，必須開 PR，且 default branch 上的 [Applicability gate](.github/workflows/applicability.yml) 必須通過（缺適用表則不能合並）。檢查腳本從 `main` 取出，PR 裡改腳本無法關掉這道門。
 5. [Open Code Review（阿里雲）](docs/security/review-net.md) 跑在 GitHub Actions，**不在你的筆電上**。不必為它裝套件；token 只由維護者設在倉庫 Secrets。它是寫完之後的可選網，不是教材。
 
 沒有 OpenSpec change、適用表沒填完，就不要寫實作。人類與 AI 同一套規則。
@@ -133,7 +133,7 @@ The live demo at https://tonnychiulab.github.io/termforge/ is served from the **
 
 ### New machine, Cursor already installed
 
-Clone this repo and **Open Folder** on the whole directory. The write-time skill lives at [`.cursor/skills/secure-by-construction/SKILL.md`](.cursor/skills/secure-by-construction/SKILL.md); do not copy it to `~/.cursor/skills/`. Open an OpenSpec change and fill the seven-clause 適用／不適用 table in `design.md` before implementation. PRs that touch code, `dist/`, Actions, or the baseline spec fail [Applicability gate](.github/workflows/applicability.yml) without that table. [Open Code Review (Alibaba Cloud)](docs/security/review-net.md) runs on GitHub, not on your laptop; it is an optional after-the-fact net, not a merge gate.
+Clone this repo and **Open Folder** on the whole directory. The write-time skill lives at [`.cursor/skills/secure-by-construction/SKILL.md`](.cursor/skills/secure-by-construction/SKILL.md); do not copy it to `~/.cursor/skills/`. Open an OpenSpec change and fill the seven-clause 適用／不適用 table in `design.md` before implementation. Editing on github.com, skipping the Agent, or saying "change it first" never loads the skill; those paths cannot update `main` without a PR that passes [Applicability gate](.github/workflows/applicability.yml) (the checker is loaded from `main`, not from the PR). [Open Code Review (Alibaba Cloud)](docs/security/review-net.md) runs on GitHub, not on your laptop; it is an optional after-the-fact net, not a merge gate.
 
 ---
 

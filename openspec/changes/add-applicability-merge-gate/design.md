@@ -18,10 +18,10 @@ Skill 只在 Cursor Agent 載入時有效。人類與不載 skill 的 agent 仍�
 
 ## Architectural Decisions
 
-### Decision 1: Fail the PR job; Branch protection is out of band
-- **Decision:** workflow 缺表即 `exit 1`。不在本 change 用 API 改 repository ruleset。
-- **Rationale:** 公開 workflow 不能假設有 admin。紅燈已讓審查看見；硬擋 Merge 需維護者勾 required check。
-- **Alternatives considered:** 只寫 README（拒絕：仍可直接開寫）；用 Open Code Review（阿里雲）當門（拒絕：可選網、continue-on-error）。
+### Decision 1: GitHub ruleset is the lock; skill is not
+- **Decision:** `main` 禁止直推與 force-push；必須開 PR。Ruleset 要求跑 **default branch 上的** `applicability.yml`。檢查腳本從 base 取出，避免 PR 改腳本就讓門失效。不要求第二人審查（本倉目前只有維護者）。
+- **Rationale:** GitHub 網頁改檔、不用 Agent、說「先改再說」都不會載入 skill。那些路徑只能在合進 `main` 時被擋。Skill 永遠無法 100%。
+- **Alternatives considered:** 只讓 CI 紅燈、不設 ruleset（拒絕：仍可直推 `main`、仍可忽略紅燈合並）；用 Open Code Review（阿里雲）當門（拒絕：可選網、continue-on-error）；要求 1 個 approving review（拒絕：單人倉會合並自己的 PR 被鎖死）。
 
 ### Decision 2: Grandfather historical OpenSpec changes
 - **Decision:** `termforge-engine`、`add-web-wasm-support`、`enhanced-controls-and-abilities`、`add-in-page-controls-cheat-sheet` 不要求適用表。

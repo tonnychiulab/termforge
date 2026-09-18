@@ -16,7 +16,7 @@
 - **誰執行：** GitHub-hosted runner 上的檢查腳本；本機可跑同一支 Python。
 - **資料在哪：** 只讀公開倉檔案與 git diff 路徑；不把 diff 送到外部 LLM。
 - **後端／帳號／機密：** 無。此 workflow 不使用 repository secrets。
-- **不提供的能力：** 不是滲透測試、不是 secret scanning、不是 Open Code Review（阿里雲）、不在 GitHub 自動開啟 Branch protection（維護者需自行把此檢查設為 required 才能硬擋「Merge」按鈕）。不阻擋未開 PR 的本機 commit。
+- **不提供的能力：** 不是滲透測試、不是 secret scanning、不是 Open Code Review（阿里雲）。不阻擋本機「先改再說」寫在硬碟上；擋的是合進 `main`。不驗證適用表是否說謊（填了假「不適用」仍可能過門）。不阻止維護者在 Settings 關掉 ruleset。
 
 ## Capabilities
 

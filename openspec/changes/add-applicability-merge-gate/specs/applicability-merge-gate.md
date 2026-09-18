@@ -15,6 +15,7 @@ The repository SHALL run a pull_request check that fails when gated paths change
 - **THEN** `applicability` 工作流程 SHALL 以非零結束
 - **AND** SHALL NOT 使用 `pull_request_target`
 - **AND** SHALL NOT 把 diff 送到外部 LLM
+- **AND** 檢查腳本 SHALL 從 PR base（通常是 `main`）載入；base 尚無腳本時才允許用 PR 複本（僅首次落地）
 
 #### Scenario: Docs-only PR is not blocked by the gate
 - **GIVEN** 一個 PR 只改 `docs/` 或 `README.md`
@@ -35,13 +36,14 @@ Clone plus opening the folder in Cursor SHALL be documented as the way to get th
 - **WHEN** 讀 README 的撰寫時安全段
 - **THEN** 必須寫：用 Open Folder 開整個倉庫、不要把 skill 裝到個人全域、不要為這件事裝 MCP、Open Code Review（阿里雲）不在筆電上
 - **AND** 必須連到 `openspec/specs/secure-by-construction.md` 與專案 skill 路徑
+- **AND** 必須寫明 GitHub 網頁改檔、不用 Agent、「先改再說」不能直推 `main`
 
 ### Requirement: 信任邊界與誠實能力（本 change）
 #### Scenario: Docs do not call the optional net a merge gate
 - **GIVEN** README 或 `docs/security/review-net.md`
 - **WHEN** 描述本檢查與 Open Code Review（阿里雲）
 - **THEN** 必須區分：適用表檢查是門；Open Code Review（阿里雲）是可選網
-- **AND** 必須寫明未設 GitHub required check 時，紅燈仍可能被忽略而合併
+- **AND** 必須寫明 GitHub 網頁改檔、不用 Agent、「先改再說」都不靠 skill，而靠 ruleset 鎖 `main`
 
 ### Requirement: 機密不得進倉（本 change）
 #### Scenario: Gate workflow has no secrets

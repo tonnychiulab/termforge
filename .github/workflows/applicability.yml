@@ -2,6 +2,8 @@
 # Write-time: openspec/specs/secure-by-construction.md and
 # .cursor/skills/secure-by-construction/SKILL.md
 # Uses pull_request, not pull_request_target. No repository secrets.
+# Run the checker from the PR base (usually main) so a PR cannot
+# neuter the gate by rewriting this workflow's script.
 
 name: Applicability gate
 
@@ -21,16 +23,33 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Checkout
+      - name: Checkout PR tree
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          path: pr
 
       - name: Fetch base branch
         run: git fetch --no-tags origin ${{ github.base_ref }}
+        working-directory: pr
+
+      - name: Load checker from base
+        run: |
+          set -euo pipefail
+          mkdir -p gate/scripts
+          base_ref="origin/${{ github.base_ref }}"
+          if git -C pr cat-file -e "${base_ref}:scripts/check-secure-by-construction-applicability.py"; then
+            git -C pr show "${base_ref}:scripts/check-secure-by-construction-applicability.py" \
+              > gate/scripts/check-secure-by-construction-applicability.py
+            echo "Using checker from ${base_ref}"
+          else
+            cp pr/scripts/check-secure-by-construction-applicability.py \
+              gate/scripts/check-secure-by-construction-applicability.py
+            echo "Base has no checker yet; using PR copy (bootstrap only)"
+          fi
 
       - name: Self-test checker
-        run: python3 scripts/check-secure-by-construction-applicability.py --self-test
+        run: python3 gate/scripts/check-secure-by-construction-applicability.py --self-test
 
       - name: Require 適用表 on gated paths
-        run: python3 scripts/check-secure-by-construction-applicability.py --base origin/${{ github.base_ref }}
+        run: python3 gate/scripts/check-secure-by-construction-applicability.py --root pr --base origin/${{ github.base_ref }}

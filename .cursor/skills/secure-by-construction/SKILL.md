@@ -29,7 +29,7 @@ Security scenes exist **before** implementation code. Read the OpenSpec baseline
 2. Any of the seven clauses neither 適用 nor 不適用 with a reason? **STOP.**
 3. 適用 but no GIVEN/WHEN/THEN about **this** change? **STOP.**
 4. About to complete feature tasks while 適用 security tasks are empty? **STOP.**
-5. CI job `applicability` will fail the PR if gated files (Rust, `dist/`, Actions, this skill, the baseline spec) land without that table. Missing scenes is not something later review will fix.
+5. CI job `applicability` will fail the PR if gated files (Rust, `dist/`, Actions, this skill, the baseline spec) land without that table. The checker is loaded from the PR base, so rewriting it in the PR does not open the gate. GitHub web edits and "change it first" still cannot update `main` without this table.
 
 **Exit:** every clause is marked and 適用 scenes exist. Only then implement.
 
